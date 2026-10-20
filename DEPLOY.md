@@ -1,31 +1,27 @@
-# Deploy (AWS console, ~30 min, free tier)
-
-Region: us-east-1 (Comprehend not in ap-south-1 Mumbai)
+# Deploy (AWS console, ap-southeast-2, Free Plan)
 
 ## 1. S3
-- Create bucket `sentiment-<yourname>` (unique). Keep defaults.
-- Later: upload index.html, enable Static website hosting (Properties), uncheck Block public access, add policy:
-  {"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":"*","Action":"s3:GetObject","Resource":"arn:aws:s3:::sentiment-<yourname>/index.html"}]}
+Create bucket `sentiment-app-riyaan`, all defaults (private).
 
-## 2. Lambda
-- Create function → Author from scratch → `sentimentFn`, Python 3.12.
-- Paste lambda_function.py, Deploy.
-- Configuration → Environment variables → BUCKET = sentiment-<yourname>
-- Configuration → Permissions → click role → Add permissions → attach:
-  - ComprehendReadOnly
-  - AmazonS3FullAccess (or scope to your bucket)
-- Timeout: 10 s.
+## 2. DynamoDB
+Create table `SentimentResults`, partition key `id` (String), default settings (on-demand).
 
-## 3. API Gateway
-- Create API → HTTP API → Add integration: Lambda → sentimentFn.
-- Route: POST /analyze. Stage: $default, auto-deploy.
-- CORS: Access-Control-Allow-Origin *, Allow-Headers *, Allow-Methods POST,OPTIONS.
-- Copy Invoke URL → paste `<invoke-url>/analyze` into index.html API const.
+## 3. Lambda
+- Create function `sentimentFn`, Python 3.14, author from scratch.
+- Code → Update → Upload .zip → `function.zip` (zip of lambda_function.py).
+- Configuration → Environment variables: `BUCKET=sentiment-app-riyaan`, `TABLE=SentimentResults`.
+- Configuration → General → Timeout 15 s.
+- Permissions: execution role must allow s3:PutObject on the bucket and dynamodb:PutItem/Scan on the table. (Free Plan default role `PowerUserRole` already has this.)
 
-## 4. Test
-curl -X POST <invoke-url>/analyze -H "content-type: application/json" -d '{"text":"I love this course"}'
-→ {"sentiment":"POSITIVE","scores":{...}}
+## 4. API Gateway
+- Create HTTP API `sentiment-api`, integration = Lambda `sentimentFn`.
+- Routes: `GET /`, `POST /analyze`, `GET /history`, all → sentimentFn.
+- Stage `$default`, auto-deploy.
 
-Check S3 → results/ has a JSON per request. Screenshot everything for the report.
-
-## Services used (4): S3, Lambda, API Gateway, Comprehend (+ IAM, CloudWatch logs)
+## 5. Test
+```
+U=https://<api-id>.execute-api.ap-southeast-2.amazonaws.com
+curl $U/                       # HTML page
+curl -X POST $U/analyze -H "content-type: application/json" -d '{"text":"I love this"}'
+curl $U/history
+```

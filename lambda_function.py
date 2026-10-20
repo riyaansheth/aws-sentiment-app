@@ -7,7 +7,7 @@ if os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
     BUCKET = os.environ["BUCKET"]
 CORS = {"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*"}
 
-# ponytail: lexicon scorer (Comprehend is SCP-denied on AWS Free Plan); swap for comprehend.detect_sentiment on a paid account
+# Lexicon scorer. Amazon Comprehend is blocked by the Free Plan service control policy; swap in comprehend.detect_sentiment on a paid account.
 POS = set("good great excellent amazing awesome love loved like liked happy fantastic wonderful best nice fun enjoy enjoyed perfect brilliant helpful easy smooth fast beautiful".split())
 NEG = set("bad terrible awful horrible hate hated worst poor sad angry frustrating frustrated boring slow broken useless disappointing disappointed ugly difficult hard confusing annoying".split())
 NEGATE = {"not", "no", "never", "n't", "dont", "don't", "cant", "can't", "isnt", "isn't", "wasnt", "wasn't"}

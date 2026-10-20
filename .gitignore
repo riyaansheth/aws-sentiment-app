@@ -2,3 +2,5 @@
 .DS_Store
 function.zip
 Screenshots_Report.pdf
+report/*.docx
+report/*.pdf

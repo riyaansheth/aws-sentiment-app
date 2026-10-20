@@ -22,6 +22,8 @@ SHOTS = [
      "Each analysis is saved as results/<uuid>.json containing the text, label, scores and timestamp."),
     ("07-dynamodb-items.png",          "Results stored in DynamoDB",
      "The same results as items in the table, read back by the History view."),
+    ("08a-app-landing.png",            "Live application: landing page",
+     "The landing page served from the API Gateway URL. The orb sits in the centre and clicking it opens the analyzer."),
     ("08-app-live-result.png",         "Live application: analysis result",
      "The web app served from the API Gateway URL. Text entered, label and scores returned by the Lambda function."),
     ("09-app-history.png",             "Live application: history",

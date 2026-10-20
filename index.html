@@ -76,6 +76,20 @@ aside li time{display:block;font-size:12px;color:var(--mist-dim);margin-top:6px}
 aside .close{position:absolute;top:22px;right:22px;background:transparent;color:var(--mist);border-color:rgba(169,199,204,.28);height:38px;padding:0 14px;font-size:13px}
 .POSITIVE{color:var(--pos-a)}.NEGATIVE{color:var(--neg-a)}.NEUTRAL{color:var(--neu)}.MIXED{color:#E08BFF}
 
+/* landing state */
+.intro{position:fixed;inset:0;z-index:3;display:grid;place-items:center;pointer-events:none;text-align:center}
+.intro h2{position:absolute;top:7vh;left:0;right:0;font-weight:800;font-size:clamp(44px,8.5vw,120px);line-height:.9;letter-spacing:-.05em;color:var(--mist);
+  transition:opacity .6s,transform .9s cubic-bezier(.6,0,.2,1)}
+.intro p{position:absolute;bottom:10vh;left:0;right:0;font-size:15px;color:var(--mist-dim);transition:opacity .4s}
+.intro p b{display:block;color:var(--mist);font-weight:700;margin-bottom:6px}
+.enter{position:fixed;left:50%;top:50%;width:min(62vmin,520px);height:min(62vmin,520px);transform:translate(-50%,-50%);
+  border-radius:50%;background:transparent;border:0;cursor:pointer;z-index:4;padding:0}
+.enter:focus-visible{outline:2px solid var(--mist);outline-offset:14px}
+body:not(.landing) .intro,body:not(.landing) .enter{display:none}
+body.landing header,body.landing form,body.landing .err{opacity:0;pointer-events:none;transform:translateY(10px)}
+header,form{transition:opacity .7s .35s,transform .9s .35s cubic-bezier(.2,.8,.2,1)}
+body.leaving .intro h2{opacity:0;transform:translateY(-40px)}
+body.leaving .intro p{opacity:0}
 @media (max-width:720px){
   header{left:20px;right:20px;top:20px;flex-direction:column;gap:6px}header p{text-align:left}
   .verdict{left:20px;top:34%;max-width:80vw}.verdict .bars{width:70vw}
@@ -88,11 +102,17 @@ aside .close{position:absolute;top:22px;right:22px;background:transparent;color:
 }
 </style>
 </head>
-<body>
+<body class="landing">
 <canvas id="orb" aria-hidden="true"></canvas>
 <div class="grade tint"></div>
 <div class="grade vignette"></div>
 <div class="grade grain"></div>
+
+<div class="intro" aria-hidden="true">
+  <h2>Mood Orb</h2>
+  <p><b>Tap the orb to begin</b>It reads the mood of anything you write.</p>
+</div>
+<button class="enter" id="enter" aria-label="Enter Mood Orb"></button>
 
 <header>
   <h1>Mood Orb</h1>
@@ -183,8 +203,13 @@ pts.setAttribute('position', new THREE.BufferAttribute(arr,3));
 const halo = new THREE.Points(pts, new THREE.PointsMaterial({color:0xA9C7CC, size:.018, transparent:true, opacity:.55}));
 scene.add(halo);
 
-function resize(){const w=innerWidth,h=innerHeight; renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix();
-  orb.position.x = w>720 ? .9 : 0; orb.position.y = w>720 ? 0 : .5;}
+let landing = true;
+const orbTarget = new THREE.Vector3(); let scaleTarget = 1.3;
+function layout(){ const w=innerWidth;
+  if (landing){ orbTarget.set(0,-.15,0); scaleTarget = 1.18; }
+  else { orbTarget.set(w>720 ? .9 : 0, w>720 ? 0 : .5, 0); scaleTarget = 1; } }
+function resize(){const w=innerWidth,h=innerHeight; renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); layout();}
+orb.scale.setScalar(1.18); orb.position.y=-.15;
 addEventListener('resize', resize); resize();
 
 let target = {...MOODS.NEUTRAL, A:new THREE.Color(MOODS.NEUTRAL.a), B:new THREE.Color(MOODS.NEUTRAL.b)};
@@ -198,10 +223,21 @@ function tick(){
   uniforms.uSpeed.value += (target.speed-uniforms.uSpeed.value)*k;
   uniforms.uA.value.lerp(target.A,k); uniforms.uB.value.lerp(target.B,k);
   uniforms.uPulse.value *= Math.pow(.93, dt*60);
+  const km = 1-Math.pow(.94, dt*60);
+  orb.position.lerp(orbTarget, km); const sc = orb.scale.x + (scaleTarget-orb.scale.x)*km; orb.scale.setScalar(sc);
   if (!reduced){ orb.rotation.y = t*.12 + mouse.x*.6; orb.rotation.x = mouse.y*.4; halo.rotation.z = t*.03; }
   renderer.render(scene, camera); requestAnimationFrame(tick);
 }
 tick();
+
+// ---------- landing ----------
+const enter = document.getElementById('enter');
+enter.addEventListener('pointerenter', ()=>{ uniforms.uPulse.value = Math.max(uniforms.uPulse.value, reduced?0:.18); });
+enter.addEventListener('click', ()=>{
+  landing = false; layout(); uniforms.uPulse.value = reduced ? 0 : .8;
+  document.body.classList.add('leaving');
+  setTimeout(()=>{ document.body.classList.remove('landing','leaving'); document.getElementById('t').focus(); }, reduced ? 0 : 650);
+});
 
 // ---------- UI ----------
 const $ = id => document.getElementById(id);

@@ -161,7 +161,7 @@ def build_pdf():
     h1 = ParagraphStyle("h1", parent=body, fontName="Times-Bold", fontSize=16, leading=20, spaceBefore=6, spaceAfter=10, alignment=0)
     h2 = ParagraphStyle("h2", parent=body, fontName="Times-Bold", fontSize=13, leading=17, spaceBefore=8, spaceAfter=6, alignment=0)
     cap = ParagraphStyle("cap", parent=cen, fontSize=10, leading=13, spaceAfter=14)
-    codes = ParagraphStyle("code", fontName="Courier", fontSize=7.6, leading=9.2)
+    codes = ParagraphStyle("code", fontName="Courier", fontSize=7.4, leading=9)
     bullet = ParagraphStyle("bul", parent=body, leftIndent=14, bulletIndent=2)
     W, H = A4; maxw = W - 50*mm
     from PIL import Image as PI
@@ -196,8 +196,8 @@ def build_pdf():
     for n, d in DEPLOY_TECH: S.append(Paragraph("<b>" + esc(n) + ".</b> " + esc(d), bullet, bulletText="•"))
     S += [Paragraph("Note on the sentiment scorer", h2), Paragraph(esc(SCORER_NOTE), body), PageBreak()]
     S += [Paragraph("3. Code", h1), Paragraph("The backend is a single file, lambda_function.py, reproduced in full below. The frontend, index.html, is about 300 lines; the three parts that matter most follow the backend listing. The complete source is in the GitHub repository.", body),
-          Paragraph("lambda_function.py", h2), Preformatted(LAMBDA_SRC, codes, maxLineLength=118)]
-    for title, src in HTML_EXCERPTS: S += [Paragraph(esc(title), h2), Preformatted(src, codes, maxLineLength=118)]
+          Paragraph("lambda_function.py", h2), Preformatted(LAMBDA_SRC, codes, maxLineLength=96)]
+    for title, src in HTML_EXCERPTS: S += [Paragraph(esc(title), h2), Preformatted(src, codes, maxLineLength=96)]
     S.append(PageBreak())
     S.append(Paragraph("4. Screenshots", h1))
     for i, (fn, c) in enumerate(SHOTS, 1): S.append(KeepTogether([img(os.path.join(SS, fn)), Paragraph(f"Figure {i+1}. {esc(c)}", cap)]))

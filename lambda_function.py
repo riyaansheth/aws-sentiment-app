@@ -28,22 +28,7 @@ def score(text):
         label = "POSITIVE" if p > n else "NEGATIVE"
     return label, {"Positive": round(p, 3), "Negative": round(n, 3), "Neutral": 0.0, "Mixed": round(min(p, n) * 2, 3)}
 
-HTML = """<!doctype html><meta charset="utf-8"><title>Sentiment Analyzer</title>
-<style>body{font-family:sans-serif;max-width:600px;margin:40px auto}textarea{width:100%;height:120px}
-pre{background:#eee;padding:10px}.POSITIVE{color:green}.NEGATIVE{color:red}.NEUTRAL{color:gray}.MIXED{color:orange}</style>
-<h2>Sentiment Analyzer</h2><p>API Gateway + Lambda + DynamoDB + S3</p>
-<textarea id="t" placeholder="Type some text..."></textarea><br><br>
-<button onclick="go()">Analyze</button> <button onclick="hist()">History</button>
-<h3 id="s"></h3><pre id="out"></pre>
-<script>
-async function go(){
-  out.textContent="...";
-  const r=await fetch("analyze",{method:"POST",body:JSON.stringify({text:t.value})});
-  const j=await r.json(); s.textContent=j.sentiment||j.error; s.className=j.sentiment||"";
-  out.textContent=JSON.stringify(j,null,2);
-}
-async function hist(){ s.textContent="History"; s.className=""; out.textContent=JSON.stringify(await (await fetch("history")).json(),null,2); }
-</script>"""
+HTML = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "index.html")).read()
 
 def lambda_handler(event, context):
     method = event["requestContext"]["http"]["method"]

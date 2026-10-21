@@ -5,7 +5,7 @@ if os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
     s3 = boto3.client("s3")
     table = boto3.resource("dynamodb").Table(os.environ["TABLE"])
     BUCKET = os.environ["BUCKET"]
-CORS = {"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*"}
+CORS = {"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "GET,POST,DELETE"}
 
 # Lexicon scorer. Amazon Comprehend is blocked by the Free Plan service control policy; swap in comprehend.detect_sentiment on a paid account.
 POS = set("good great excellent amazing awesome love loved like liked happy fantastic wonderful best nice fun enjoy enjoyed perfect brilliant helpful easy smooth fast beautiful".split())
@@ -33,6 +33,15 @@ HTML = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "index.html
 def lambda_handler(event, context):
     method = event["requestContext"]["http"]["method"]
     path = event.get("rawPath", "/")
+    if method == "DELETE" and path == "/history":
+        # ponytail: full scan + batch delete, fine for a demo table; paginate if it ever grows past a few thousand rows
+        with table.batch_writer() as b:
+            for it in table.scan(ProjectionExpression="id")["Items"]:
+                b.delete_item(Key={"id": it["id"]})
+        objs = s3.list_objects_v2(Bucket=BUCKET, Prefix="results/").get("Contents", [])
+        if objs:
+            s3.delete_objects(Bucket=BUCKET, Delete={"Objects": [{"Key": o["Key"]} for o in objs]})
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"cleared": True})}
     if method == "GET" and path == "/history":
         items = table.scan(Limit=20)["Items"]
         return {"statusCode": 200, "headers": CORS, "body": json.dumps(items, default=str)}

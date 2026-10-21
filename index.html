@@ -73,6 +73,8 @@ aside ul{list-style:none;display:grid;gap:14px}
 aside li{padding:14px 0;border-top:1px solid rgba(169,199,204,.12);font-size:14px;line-height:1.45}
 aside li span{display:block;font-weight:800;font-size:13px;margin-bottom:5px}
 aside li time{display:block;font-size:12px;color:var(--mist-dim);margin-top:6px}
+aside .clear{right:96px;color:#FF8A6A;border-color:rgba(255,138,106,.35)}
+aside .clear:hover{border-color:#FF8A6A}
 aside .close{position:absolute;top:22px;right:22px;background:transparent;color:var(--mist);border-color:rgba(169,199,204,.28);height:38px;padding:0 14px;font-size:13px}
 .POSITIVE{color:var(--pos-a)}.NEGATIVE{color:var(--neg-a)}.NEUTRAL{color:var(--neu)}.MIXED{color:#E08BFF}
 
@@ -134,6 +136,7 @@ body.leaving .intro p{opacity:0}
 
 <aside id="panel" aria-label="History">
   <button class="close" type="button" id="closeHist">Close</button>
+  <button class="close clear" type="button" id="clearHist">Clear history</button>
   <h2>Recent readings</h2>
   <p class="sub">Latest 20 from DynamoDB</p>
   <ul id="list"></ul>
@@ -285,6 +288,12 @@ $('hist').addEventListener('click', async ()=>{
   }catch{ list.innerHTML='<li>History is unavailable right now. Try again in a moment.</li>'; }
 });
 $('closeHist').addEventListener('click', ()=>panel.classList.remove('open'));
+$('clearHist').addEventListener('click', async ()=>{
+  if(!confirm('Delete every saved reading?')) return;
+  list.innerHTML='<li>Clearing</li>';
+  try{ await fetch('history',{method:'DELETE'}); list.innerHTML='<li>Nothing yet. Read a mood to start the record.</li>'; }
+  catch{ list.innerHTML='<li>Could not clear history. Try again in a moment.</li>'; }
+});
 addEventListener('keydown', e=>{ if(e.key==='Escape') panel.classList.remove('open'); });
 </script>
 </body>
